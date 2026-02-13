@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.verdura.app.ui.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/action_home_to_createPost"
+            app:destination="@id/createPostFragment" />
+
+        <action
+            android:id="@+id/action_home_to_postDetail"
+            app:destination="@id/postDetailFragment">
+            <argument
+                android:name="postId"
+                app:argType="string" />
+        </action>
+
+        <action
+            android:id="@+id/action_home_to_map"
+            app:destination="@id/mapFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createPostFragment"
+        android:name="com.verdura.app.ui.CreatePostFragment"
+        android:label="Create Post"
+        tools:layout="@layout/fragment_create_post" />
+
+    <fragment
+        android:id="@+id/postDetailFragment"
+        android:name="com.verdura.app.ui.PostDetailFragment"
+        android:label="Post Details"
+        tools:layout="@layout/fragment_post_detail">
+
+        <argument
+            android:name="postId"
+            app:argType="string" />
+
+        <action
+            android:id="@+id/action_postDetail_to_editPost"
+            app:destination="@id/editPostFragment">
+            <argument
+                android:name="postId"
+                app:argType="string" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/editPostFragment"
+        android:name="com.verdura.app.ui.EditPostFragment"
+        android:label="Edit Post"
+        tools:layout="@layout/fragment_edit_post">
+
+        <argument
+            android:name="postId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="com.verdura.app.ui.MapFragment"
+        android:label="Map"
+        tools:layout="@layout/fragment_map">
+
+        <action
+            android:id="@+id/action_map_to_postDetail"
+            app:destination="@id/postDetailFragment">
+            <argument
+                android:name="postId"
+                app:argType="string" />
+        </action>
+    </fragment>
+
+</navigation>
