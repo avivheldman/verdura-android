@@ -17,6 +17,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.verdura.app.R
+import com.verdura.app.util.SwipeRefreshHelper
 import com.verdura.app.viewmodel.PostViewModel
 import kotlinx.coroutines.launch
 
@@ -70,7 +71,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupSwipeRefresh() {
-        swipeRefreshLayout.setOnRefreshListener {
+        SwipeRefreshHelper.setup(swipeRefreshLayout) {
             viewModel.syncPosts()
         }
     }
@@ -93,7 +94,7 @@ class HomeFragment : Fragment() {
 
                 launch {
                     viewModel.uiState.collect { state ->
-                        swipeRefreshLayout.isRefreshing = false
+                        SwipeRefreshHelper.stopRefreshing(swipeRefreshLayout)
                         loadingIndicator.visibility = if (state.isLoading && postAdapter.itemCount == 0) {
                             View.VISIBLE
                         } else {
