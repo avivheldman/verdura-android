@@ -20,11 +20,19 @@ import com.verdura.app.viewmodel.AuthViewModel
 import com.verdura.app.viewmodel.AuthViewModelFactory
 
 class LoginFragment : Fragment() {
+
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
-    private val authViewModel: AuthViewModel by activityViewModels { AuthViewModelFactory(FirebaseAuthRepository()) }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    private val authViewModel: AuthViewModel by activityViewModels {
+        AuthViewModelFactory(FirebaseAuthRepository())
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -36,32 +44,62 @@ class LoginFragment : Fragment() {
     }
 
     private fun setupViews() {
-        binding.emailEditText.doAfterTextChanged { binding.emailInputLayout.error = null }
-        binding.passwordEditText.doAfterTextChanged { binding.passwordInputLayout.error = null }
-        binding.loginButton.setOnClickListener { attemptLogin() }
-        binding.forgotPasswordTextView.setOnClickListener { showForgotPasswordDialog() }
-        binding.registerPromptTextView.setOnClickListener { navigateToRegister() }
+        binding.emailEditText.doAfterTextChanged {
+            binding.emailInputLayout.error = null
+        }
+
+        binding.passwordEditText.doAfterTextChanged {
+            binding.passwordInputLayout.error = null
+        }
+
+        binding.loginButton.setOnClickListener {
+            attemptLogin()
+        }
+
+        binding.forgotPasswordTextView.setOnClickListener {
+            showForgotPasswordDialog()
+        }
+
+        binding.registerPromptTextView.setOnClickListener {
+            navigateToRegister()
+        }
     }
 
     private fun observeViewModel() {
         authViewModel.authState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is AuthState.Loading -> setLoadingState(true)
-                is AuthState.Authenticated -> setLoadingState(false)
-                is AuthState.Unauthenticated -> setLoadingState(false)
-                is AuthState.Error -> { setLoadingState(false); showError(state.message) }
+                is AuthState.Loading -> {
+                    setLoadingState(true)
+                }
+                is AuthState.Authenticated -> {
+                    setLoadingState(false)
+                }
+                is AuthState.Unauthenticated -> {
+                    setLoadingState(false)
+                }
+                is AuthState.Error -> {
+                    setLoadingState(false)
+                    showError(state.message)
+                }
             }
         }
+
         authViewModel.loginResult.observe(viewLifecycleOwner) { result ->
             result?.let {
-                if (it.isFailure) showError(it.exceptionOrNull()?.message ?: getString(R.string.error_login_failed))
+                if (it.isFailure) {
+                    showError(it.exceptionOrNull()?.message ?: getString(R.string.error_login_failed))
+                }
                 authViewModel.clearLoginResult()
             }
         }
+
         authViewModel.resetPasswordResult.observe(viewLifecycleOwner) { result ->
             result?.let {
-                if (it.isSuccess) Toast.makeText(context, R.string.password_reset_sent, Toast.LENGTH_LONG).show()
-                else showError(it.exceptionOrNull()?.message ?: "Failed to send reset email")
+                if (it.isSuccess) {
+                    Toast.makeText(context, R.string.password_reset_sent, Toast.LENGTH_LONG).show()
+                } else {
+                    showError(it.exceptionOrNull()?.message ?: "Failed to send reset email")
+                }
                 authViewModel.clearResetPasswordResult()
             }
         }
@@ -70,29 +108,51 @@ class LoginFragment : Fragment() {
     private fun attemptLogin() {
         val email = binding.emailEditText.text.toString().trim()
         val password = binding.passwordEditText.text.toString()
+
         var isValid = true
-        FormValidator.validateEmail(email).let { if (!it.isValid) { binding.emailInputLayout.error = it.errorMessage; isValid = false } }
-        FormValidator.validatePassword(password).let { if (!it.isValid) { binding.passwordInputLayout.error = it.errorMessage; isValid = false } }
-        if (isValid) authViewModel.login(email, password)
+
+        val emailValidation = FormValidator.validateEmail(email)
+        if (!emailValidation.isValid) {
+            binding.emailInputLayout.error = emailValidation.errorMessage
+            isValid = false
+        }
+
+        val passwordValidation = FormValidator.validatePassword(password)
+        if (!passwordValidation.isValid) {
+            binding.passwordInputLayout.error = passwordValidation.errorMessage
+            isValid = false
+        }
+
+        if (isValid) {
+            authViewModel.login(email, password)
+        }
     }
 
     private fun showForgotPasswordDialog() {
-        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_forgot_password, null)
+        val dialogView = LayoutInflater.from(context)
+            .inflate(R.layout.dialog_forgot_password, null)
         val emailEditText = dialogView.findViewById<TextInputEditText>(R.id.emailEditText)
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.forgot_password)
             .setView(dialogView)
             .setPositiveButton(R.string.send) { _, _ ->
                 val email = emailEditText.text.toString().trim()
-                if (FormValidator.isValidEmail(email)) authViewModel.resetPassword(email)
-                else Toast.makeText(context, R.string.error_email_invalid, Toast.LENGTH_SHORT).show()
+                if (FormValidator.isValidEmail(email)) {
+                    authViewModel.resetPassword(email)
+                } else {
+                    Toast.makeText(context, R.string.error_email_invalid, Toast.LENGTH_SHORT).show()
+                }
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
     private fun navigateToRegister() {
-        parentFragmentManager.beginTransaction().replace(R.id.authContainer, RegisterFragment()).addToBackStack(null).commit()
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.authContainer, RegisterFragment())
+            .addToBackStack(null)
+            .commit()
     }
 
     private fun setLoadingState(isLoading: Boolean) {
@@ -101,6 +161,12 @@ class LoginFragment : Fragment() {
         binding.progressIndicator.isVisible = isLoading
     }
 
-    private fun showError(message: String) = Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-    override fun onDestroyView() { super.onDestroyView(); _binding = null }
+    private fun showError(message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }
