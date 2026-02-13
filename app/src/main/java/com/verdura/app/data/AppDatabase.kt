@@ -14,6 +14,8 @@ import com.verdura.app.model.User
 )
 abstract class AppDatabase : RoomDatabase() {
 
+    abstract fun postDao(): PostDao
+
     companion object {
         private const val DATABASE_NAME = "verdura_database"
 
