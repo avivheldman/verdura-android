@@ -46,6 +46,7 @@
     <string name="no_posts">No posts yet</string>
     <string name="no_posts_description">Start sharing your plant journey</string>
     <string name="create_post">Create Post</string>
+    <string name="add_post">Add Post</string>
     <string name="delete_post">Delete Post</string>
     <string name="post_deleted">Post deleted</string>
 
