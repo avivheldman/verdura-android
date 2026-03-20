@@ -5,6 +5,7 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/homeFragment">
 
+    <!-- Home / Feed -->
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.verdura.app.ui.HomeFragment"
@@ -22,18 +23,16 @@
                 android:name="postId"
                 app:argType="string" />
         </action>
-
-        <action
-            android:id="@+id/action_home_to_map"
-            app:destination="@id/mapFragment" />
     </fragment>
 
+    <!-- Create Post -->
     <fragment
         android:id="@+id/createPostFragment"
         android:name="com.verdura.app.ui.CreatePostFragment"
         android:label="Create Post"
         tools:layout="@layout/fragment_create_post" />
 
+    <!-- Post Detail -->
     <fragment
         android:id="@+id/postDetailFragment"
         android:name="com.verdura.app.ui.PostDetailFragment"
@@ -53,6 +52,7 @@
         </action>
     </fragment>
 
+    <!-- Edit Post -->
     <fragment
         android:id="@+id/editPostFragment"
         android:name="com.verdura.app.ui.EditPostFragment"
@@ -64,6 +64,7 @@
             app:argType="string" />
     </fragment>
 
+    <!-- Map -->
     <fragment
         android:id="@+id/mapFragment"
         android:name="com.verdura.app.ui.MapFragment"
@@ -72,6 +73,51 @@
 
         <action
             android:id="@+id/action_map_to_postDetail"
+            app:destination="@id/postDetailFragment">
+            <argument
+                android:name="postId"
+                app:argType="string" />
+        </action>
+    </fragment>
+
+    <!-- Plant Explore (External API) -->
+    <fragment
+        android:id="@+id/plantExploreFragment"
+        android:name="com.verdura.app.ui.PlantExploreFragment"
+        android:label="Explore" />
+
+    <!-- Profile -->
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.verdura.app.ui.profile.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile">
+
+        <action
+            android:id="@+id/action_profile_to_editProfile"
+            app:destination="@id/editProfileFragment" />
+
+        <action
+            android:id="@+id/action_profile_to_myPosts"
+            app:destination="@id/myPostsFragment" />
+    </fragment>
+
+    <!-- Edit Profile -->
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.verdura.app.ui.profile.EditProfileFragment"
+        android:label="Edit Profile"
+        tools:layout="@layout/fragment_edit_profile" />
+
+    <!-- My Posts -->
+    <fragment
+        android:id="@+id/myPostsFragment"
+        android:name="com.verdura.app.ui.profile.MyPostsFragment"
+        android:label="My Posts"
+        tools:layout="@layout/fragment_my_posts">
+
+        <action
+            android:id="@+id/action_myPosts_to_postDetail"
             app:destination="@id/postDetailFragment">
             <argument
                 android:name="postId"

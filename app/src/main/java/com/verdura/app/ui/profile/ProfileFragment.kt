@@ -8,11 +8,13 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.verdura.app.R
 import com.verdura.app.databinding.FragmentProfileBinding
 import com.verdura.app.repository.FirebaseUserRepository
+import com.verdura.app.ui.MainActivity
 import com.verdura.app.viewmodel.ProfileViewModel
 import com.verdura.app.viewmodel.ProfileViewModelFactory
 
@@ -35,19 +37,13 @@ class ProfileFragment : Fragment() {
 
     private fun setupViews() {
         binding.editProfileButton.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.mainContainer, EditProfileFragment())
-                .addToBackStack(null)
-                .commit()
+            findNavController().navigate(R.id.action_profile_to_editProfile)
         }
         binding.myPostsButton.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.mainContainer, MyPostsFragment())
-                .addToBackStack(null)
-                .commit()
+            findNavController().navigate(R.id.action_profile_to_myPosts)
         }
         binding.logoutButton.setOnClickListener {
-            FirebaseAuth.getInstance().signOut()
+            (requireActivity() as? MainActivity)?.authViewModel?.logout()
         }
     }
 

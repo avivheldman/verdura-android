@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.verdura.app.R
@@ -46,7 +47,7 @@ class EditProfileFragment : Fragment() {
     private fun setupViews() {
         binding.changePhotoButton.setOnClickListener { pickImage.launch("image/*") }
         binding.saveButton.setOnClickListener { saveProfile() }
-        binding.cancelButton.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.cancelButton.setOnClickListener { findNavController().popBackStack() }
     }
 
     private fun observeViewModel() {
@@ -69,7 +70,7 @@ class EditProfileFragment : Fragment() {
             if (success) {
                 Toast.makeText(context, R.string.profile_updated, Toast.LENGTH_SHORT).show()
                 viewModel.clearUpdateSuccess()
-                parentFragmentManager.popBackStack()
+                findNavController().popBackStack()
             }
         }
     }
