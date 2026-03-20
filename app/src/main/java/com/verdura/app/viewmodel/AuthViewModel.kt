@@ -4,13 +4,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.verdura.app.data.PostDao
+import com.verdura.app.data.UserDao
 import com.verdura.app.model.User
 import com.verdura.app.repository.AuthRepository
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val postDao: PostDao? = null,
+    private val userDao: UserDao? = null
 ) : ViewModel() {
 
     private val _currentUser = MutableLiveData<User?>()
@@ -72,6 +76,8 @@ class AuthViewModel(
 
     fun logout() {
         viewModelScope.launch {
+            postDao?.deleteAll()
+            userDao?.deleteAll()
             authRepository.logout()
         }
     }

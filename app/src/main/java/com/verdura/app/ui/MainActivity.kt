@@ -7,6 +7,7 @@ import androidx.core.view.isVisible
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.verdura.app.R
+import com.verdura.app.data.AppDatabase
 import com.verdura.app.databinding.ActivityMainBinding
 import com.verdura.app.repository.FirebaseAuthRepository
 import com.verdura.app.ui.auth.LoginFragment
@@ -16,7 +17,10 @@ import com.verdura.app.viewmodel.AuthViewModelFactory
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    val authViewModel: AuthViewModel by viewModels { AuthViewModelFactory(FirebaseAuthRepository()) }
+    private val db by lazy { AppDatabase.getInstance(this) }
+    val authViewModel: AuthViewModel by viewModels {
+        AuthViewModelFactory(FirebaseAuthRepository(), db.postDao(), db.userDao())
+    }
     private var navController: NavController? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
