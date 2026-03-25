@@ -7,12 +7,13 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.verdura.app.model.PendingOperation
+import com.verdura.app.model.PlantInfo
 import com.verdura.app.model.Post
 import com.verdura.app.model.User
 
 @Database(
-    entities = [User::class, Post::class, PendingOperation::class],
-    version = 2,
+    entities = [User::class, Post::class, PendingOperation::class, PlantInfo::class],
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,6 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun postDao(): PostDao
     abstract fun userDao(): UserDao
     abstract fun pendingOperationDao(): PendingOperationDao
+    abstract fun plantInfoDao(): PlantInfoDao
 
     companion object {
         private const val DATABASE_NAME = "verdura_database"
@@ -38,6 +40,23 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS plant_info (
+                        id INTEGER PRIMARY KEY NOT NULL,
+                        commonName TEXT,
+                        scientificName TEXT,
+                        cycle TEXT,
+                        watering TEXT,
+                        sunlight TEXT,
+                        imageUrl TEXT,
+                        cachedAt INTEGER NOT NULL DEFAULT 0
+                    )
+                """.trimIndent())
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -48,7 +67,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
