@@ -1,5 +1,6 @@
 package com.verdura.app.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -88,15 +89,27 @@ class PostViewModel(
     fun createPost(
         userId: String,
         text: String,
-        imageUrl: String? = null,
+        imageUri: Uri? = null,
         latitude: Double? = null,
         longitude: Double? = null
     ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
+            val postId = UUID.randomUUID().toString()
             val currentTime = System.currentTimeMillis()
+
+            var imageUrl: String? = null
+            if (imageUri != null) {
+                val uploadResult = postRepository.uploadPostImage(postId, imageUri)
+                if (uploadResult.isFailure) {
+                    _uiState.update { it.copy(isLoading = false, error = "Failed to upload image") }
+                    return@launch
+                }
+                imageUrl = uploadResult.getOrNull()
+            }
+
             val post = Post(
-                id = UUID.randomUUID().toString(),
+                id = postId,
                 userId = userId,
                 text = text,
                 imageUrl = imageUrl,

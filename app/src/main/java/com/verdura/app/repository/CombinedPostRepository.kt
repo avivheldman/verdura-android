@@ -83,6 +83,10 @@ class CombinedPostRepository(
         }
     }
 
+    override suspend fun uploadPostImage(postId: String, imageUri: android.net.Uri): Result<String> {
+        return firebaseRepository.uploadPostImage(postId, imageUri)
+    }
+
     override suspend fun syncPosts(): Result<Unit> {
         return try {
             if (networkChecker.isNetworkAvailable()) {

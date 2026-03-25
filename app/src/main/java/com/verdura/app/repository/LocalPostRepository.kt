@@ -60,6 +60,10 @@ class LocalPostRepository(
         }
     }
 
+    override suspend fun uploadPostImage(postId: String, imageUri: android.net.Uri): Result<String> {
+        return Result.failure(Exception("Local repository cannot upload images"))
+    }
+
     override suspend fun syncPosts(): Result<Unit> {
         return Result.success(Unit)
     }
