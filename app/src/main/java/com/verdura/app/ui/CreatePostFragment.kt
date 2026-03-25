@@ -207,7 +207,7 @@ class CreatePostFragment : Fragment() {
             viewModel.createPost(
                 userId = userId,
                 text = text,
-                imageUrl = selectedImageUri?.toString(),
+                imageUri = selectedImageUri,
                 latitude = currentLocation?.latitude,
                 longitude = currentLocation?.longitude
             )

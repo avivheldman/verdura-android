@@ -1,5 +1,6 @@
 package com.verdura.app.repository
 
+import android.net.Uri
 import com.verdura.app.model.Post
 import kotlinx.coroutines.flow.Flow
 
@@ -11,5 +12,6 @@ interface PostRepository {
     suspend fun createPost(post: Post): Result<Post>
     suspend fun updatePost(post: Post): Result<Post>
     suspend fun deletePost(postId: String): Result<Unit>
+    suspend fun uploadPostImage(postId: String, imageUri: Uri): Result<String>
     suspend fun syncPosts(): Result<Unit>
 }

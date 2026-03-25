@@ -1,7 +1,9 @@
 package com.verdura.app.repository
 
+import android.net.Uri
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.storage.FirebaseStorage
 import com.verdura.app.model.Post
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -10,7 +12,8 @@ import kotlinx.coroutines.tasks.await
 import kotlin.math.cos
 
 class FirebasePostRepository(
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 ) : PostRepository {
 
     private val postsCollection = firestore.collection("posts")
@@ -106,7 +109,23 @@ class FirebasePostRepository(
     override suspend fun deletePost(postId: String): Result<Unit> {
         return try {
             postsCollection.document(postId).delete().await()
+            try {
+                storage.reference.child("post_images/$postId.jpg").delete().await()
+            } catch (_: Exception) {
+                // Image may not exist, ignore
+            }
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun uploadPostImage(postId: String, imageUri: Uri): Result<String> {
+        return try {
+            val imageRef = storage.reference.child("post_images/$postId.jpg")
+            imageRef.putFile(imageUri).await()
+            val downloadUrl = imageRef.downloadUrl.await().toString()
+            Result.success(downloadUrl)
         } catch (e: Exception) {
             Result.failure(e)
         }
