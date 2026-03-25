@@ -30,6 +30,16 @@
             android:padding="16dp">
 
             <TextView
+                android:id="@+id/authorText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorPrimary"
+                tools:text="John Doe" />
+
+            <TextView
                 android:id="@+id/postText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
