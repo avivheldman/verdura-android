@@ -9,6 +9,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.squareup.picasso.Picasso
 import com.verdura.app.R
 import com.verdura.app.model.Post
@@ -17,6 +19,9 @@ class PostAdapter(
     private val onPostClick: (Post) -> Unit,
     private val onPostLongClick: (Post) -> Boolean = { false }
 ) : ListAdapter<Post, PostAdapter.PostViewHolder>(PostDiffCallback()) {
+
+    private val authorCache = mutableMapOf<String, String>()
+    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -29,6 +34,7 @@ class PostAdapter(
     }
 
     inner class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val authorText: TextView = itemView.findViewById(R.id.authorText)
         private val postImage: ImageView = itemView.findViewById(R.id.postImage)
         private val postText: TextView = itemView.findViewById(R.id.postText)
         private val locationIcon: ImageView = itemView.findViewById(R.id.locationIcon)
@@ -37,6 +43,7 @@ class PostAdapter(
 
         fun bind(post: Post) {
             postText.text = post.text
+            bindAuthor(post.userId)
 
             if (!post.imageUrl.isNullOrEmpty()) {
                 postImage.visibility = View.VISIBLE
@@ -66,6 +73,30 @@ class PostAdapter(
 
             itemView.setOnClickListener { onPostClick(post) }
             itemView.setOnLongClickListener { onPostLongClick(post) }
+        }
+
+        private fun bindAuthor(userId: String) {
+            val cached = authorCache[userId]
+            if (cached != null) {
+                authorText.text = cached
+                return
+            }
+
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            if (currentUser != null && currentUser.uid == userId) {
+                val name = currentUser.displayName ?: "You"
+                authorCache[userId] = name
+                authorText.text = name
+                return
+            }
+
+            authorText.text = ""
+            firestore.collection("users").document(userId).get()
+                .addOnSuccessListener { doc ->
+                    val name = doc.getString("displayName") ?: "Unknown"
+                    authorCache[userId] = name
+                    authorText.text = name
+                }
         }
     }
 
