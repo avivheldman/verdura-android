@@ -9,18 +9,36 @@ import androidx.navigation.fragment.NavHostFragment
 import com.verdura.app.R
 import com.verdura.app.data.AppDatabase
 import com.verdura.app.databinding.ActivityMainBinding
+import com.verdura.app.repository.CombinedPostRepository
 import com.verdura.app.repository.FirebaseAuthRepository
+import com.verdura.app.repository.FirebasePostRepository
+import com.verdura.app.repository.LocalPostRepository
 import com.verdura.app.ui.auth.LoginFragment
+import com.verdura.app.util.AndroidNetworkChecker
 import com.verdura.app.viewmodel.AuthState
 import com.verdura.app.viewmodel.AuthViewModel
 import com.verdura.app.viewmodel.AuthViewModelFactory
+import com.verdura.app.viewmodel.PostViewModel
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val db by lazy { AppDatabase.getInstance(this) }
+    private val networkChecker by lazy { AndroidNetworkChecker(this) }
+
     val authViewModel: AuthViewModel by viewModels {
         AuthViewModelFactory(FirebaseAuthRepository(), db.postDao(), db.userDao())
     }
+
+    val postViewModel: PostViewModel by viewModels {
+        val firebaseRepo = FirebasePostRepository()
+        val localRepo = LocalPostRepository(db.postDao())
+        val combinedRepo = CombinedPostRepository(
+            localRepo, firebaseRepo, db.postDao(), networkChecker,
+            (application as? com.verdura.app.VerduraApplication)?.offlineSyncManager
+        )
+        PostViewModel.Factory(combinedRepo)
+    }
+
     private var navController: NavController? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
