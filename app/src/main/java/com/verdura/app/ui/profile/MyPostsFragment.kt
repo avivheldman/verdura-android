@@ -13,9 +13,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
-import com.verdura.app.R
 import com.verdura.app.databinding.FragmentMyPostsBinding
 import com.verdura.app.ui.PostAdapter
+import com.verdura.app.util.SwipeRefreshHelper
 import com.verdura.app.viewmodel.PostViewModel
 import kotlinx.coroutines.launch
 
@@ -33,6 +33,7 @@ class MyPostsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        setupSwipeRefresh()
         observeViewModel()
         loadMyPosts()
     }
@@ -48,19 +49,29 @@ class MyPostsFragment : Fragment() {
         binding.recyclerView.adapter = adapter
     }
 
+    private fun setupSwipeRefresh() {
+        SwipeRefreshHelper.setup(binding.swipeRefreshLayout) {
+            loadMyPosts()
+        }
+    }
+
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.posts.collect { posts ->
                         adapter.submitList(posts)
-                        binding.emptyStateLayout.isVisible = posts.isEmpty()
+                        SwipeRefreshHelper.stopRefreshing(binding.swipeRefreshLayout)
+                        binding.emptyStateLayout.isVisible = posts.isEmpty() && !viewModel.uiState.value.isLoading
                         binding.recyclerView.isVisible = posts.isNotEmpty()
                     }
                 }
                 launch {
                     viewModel.uiState.collect { state ->
                         binding.progressIndicator.isVisible = state.isLoading && adapter.itemCount == 0
+                        if (!state.isLoading) {
+                            SwipeRefreshHelper.stopRefreshing(binding.swipeRefreshLayout)
+                        }
                     }
                 }
             }
