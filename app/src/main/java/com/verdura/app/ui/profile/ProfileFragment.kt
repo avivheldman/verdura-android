@@ -13,6 +13,8 @@ import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.verdura.app.R
 import com.verdura.app.databinding.FragmentProfileBinding
+import com.verdura.app.data.AppDatabase
+import com.verdura.app.repository.CachingUserRepository
 import com.verdura.app.repository.FirebaseUserRepository
 import com.verdura.app.ui.MainActivity
 import com.verdura.app.viewmodel.ProfileViewModel
@@ -21,7 +23,10 @@ import com.verdura.app.viewmodel.ProfileViewModelFactory
 class ProfileFragment : Fragment() {
     private var _binding: FragmentProfileBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: ProfileViewModel by viewModels { ProfileViewModelFactory(FirebaseUserRepository()) }
+    private val viewModel: ProfileViewModel by viewModels {
+        val userDao = AppDatabase.getInstance(requireContext()).userDao()
+        ProfileViewModelFactory(CachingUserRepository(FirebaseUserRepository(), userDao))
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentProfileBinding.inflate(inflater, container, false)

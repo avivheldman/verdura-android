@@ -15,6 +15,8 @@ import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.verdura.app.R
 import com.verdura.app.databinding.FragmentEditProfileBinding
+import com.verdura.app.data.AppDatabase
+import com.verdura.app.repository.CachingUserRepository
 import com.verdura.app.repository.FirebaseUserRepository
 import com.verdura.app.viewmodel.ProfileViewModel
 import com.verdura.app.viewmodel.ProfileViewModelFactory
@@ -22,7 +24,10 @@ import com.verdura.app.viewmodel.ProfileViewModelFactory
 class EditProfileFragment : Fragment() {
     private var _binding: FragmentEditProfileBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: ProfileViewModel by viewModels { ProfileViewModelFactory(FirebaseUserRepository()) }
+    private val viewModel: ProfileViewModel by viewModels {
+        val userDao = AppDatabase.getInstance(requireContext()).userDao()
+        ProfileViewModelFactory(CachingUserRepository(FirebaseUserRepository(), userDao))
+    }
     private var selectedPhotoUri: Uri? = null
 
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
