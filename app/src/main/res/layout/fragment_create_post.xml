@@ -100,11 +100,12 @@
             android:textSize="14sp"
             android:visibility="gone" />
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/locationProgress"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginTop="8dp"
+            android:indeterminate="true"
             android:visibility="gone" />
 
         <View
@@ -119,12 +120,13 @@
             android:layout_marginTop="24dp"
             android:text="Share Post" />
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/submitProgress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="16dp"
+            android:indeterminate="true"
             android:visibility="gone" />
     </LinearLayout>
 </ScrollView>

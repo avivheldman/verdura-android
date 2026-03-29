@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -19,6 +18,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.squareup.picasso.Picasso
@@ -38,7 +38,7 @@ class EditPostFragment : Fragment() {
     private lateinit var postTextInput: TextInputEditText
     private lateinit var locationText: TextView
     private lateinit var saveButton: MaterialButton
-    private lateinit var saveProgress: ProgressBar
+    private lateinit var saveProgress: CircularProgressIndicator
     private lateinit var imageCompressor: ImageCompressor
 
     private var currentPost: Post? = null
