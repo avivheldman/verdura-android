@@ -177,6 +177,10 @@ class PostViewModel(
         }
     }
 
+    suspend fun uploadImage(postId: String, imageUri: Uri): Result<String> {
+        return postRepository.uploadPostImage(postId, imageUri)
+    }
+
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
