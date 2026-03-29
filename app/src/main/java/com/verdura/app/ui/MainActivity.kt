@@ -76,6 +76,12 @@ class MainActivity : AppCompatActivity() {
                     }
                     true
                 }
+                R.id.nav_map -> {
+                    if (currentDestination != R.id.mapFragment) {
+                        navController?.navigate(R.id.mapFragment)
+                    }
+                    true
+                }
                 R.id.nav_explore -> {
                     if (currentDestination != R.id.plantExploreFragment) {
                         navController?.navigate(R.id.plantExploreFragment)
@@ -96,6 +102,7 @@ class MainActivity : AppCompatActivity() {
             val selectedItemId = when (destination.id) {
                 R.id.homeFragment, R.id.createPostFragment,
                 R.id.postDetailFragment, R.id.editPostFragment -> R.id.nav_home
+                R.id.mapFragment -> R.id.nav_map
                 R.id.plantExploreFragment -> R.id.nav_explore
                 R.id.profileFragment, R.id.editProfileFragment,
                 R.id.myPostsFragment -> R.id.nav_profile

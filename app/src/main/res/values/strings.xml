@@ -62,4 +62,8 @@
     <string name="search_plants">Search plants</string>
     <string name="no_results">No results found</string>
     <string name="external_data">Explore</string>
+
+    <!-- Map -->
+    <string name="map">Map</string>
+    <string name="offline_pending">%d pending changes will sync when online</string>
 </resources>
