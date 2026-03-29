@@ -4,6 +4,7 @@ import com.verdura.app.api.PlantApiService
 import com.verdura.app.api.RetrofitClient
 import com.verdura.app.data.PlantInfoDao
 import com.verdura.app.model.PlantInfo
+import com.verdura.app.util.ApiConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -12,8 +13,7 @@ class PlantRepository(
     private val apiService: PlantApiService = RetrofitClient.plantApiService
 ) {
     companion object {
-        const val API_KEY = "sk-XXXX-placeholder"
-        private const val CACHE_DURATION_MS = 24 * 60 * 60 * 1000L // 24 hours
+        private const val CACHE_DURATION_MS = 24 * 60 * 60 * 1000L
     }
 
     fun searchPlants(query: String): Flow<List<PlantInfo>> = flow {
@@ -27,7 +27,7 @@ class PlantRepository(
 
     suspend fun fetchPlantsFromApi(query: String? = null, page: Int = 1): Result<List<PlantInfo>> {
         return try {
-            val response = apiService.getPlantList(API_KEY, page, query)
+            val response = apiService.getPlantList(ApiConfig.getPlantApiKey(), page, query)
             val plants = response.data.map { summary ->
                 PlantInfo(
                     id = summary.id,

@@ -4,6 +4,7 @@ import android.app.Application
 import com.verdura.app.data.AppDatabase
 import com.verdura.app.repository.FirebasePostRepository
 import com.verdura.app.util.AndroidNetworkChecker
+import com.verdura.app.util.ApiConfig
 import com.verdura.app.util.OfflineSyncManager
 import com.verdura.app.util.PicassoConfig
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +23,7 @@ class VerduraApplication : Application() {
         super.onCreate()
 
         PicassoConfig.initialize(this)
+        ApiConfig.init(this)
 
         val db = AppDatabase.getInstance(this)
         val networkChecker = AndroidNetworkChecker(this)
