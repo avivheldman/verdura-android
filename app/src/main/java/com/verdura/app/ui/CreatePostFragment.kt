@@ -14,7 +14,9 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -30,8 +32,10 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 import com.verdura.app.R
+import com.verdura.app.util.ImageCompressor
 import com.verdura.app.viewmodel.PostViewModel
 import kotlinx.coroutines.launch
+import java.io.File
 
 class CreatePostFragment : Fragment() {
 
@@ -49,16 +53,23 @@ class CreatePostFragment : Fragment() {
     private lateinit var imageCard: View
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var imageCompressor: ImageCompressor
 
     private var selectedImageUri: Uri? = null
     private var currentLocation: Location? = null
+    private var cameraImageUri: Uri? = null
 
-    private val imagePickerLauncher = registerForActivityResult(
+    private val galleryLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let {
-            selectedImageUri = it
-            showSelectedImage(it)
+        uri?.let { handleSelectedImage(it) }
+    }
+
+    private val cameraLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            cameraImageUri?.let { handleSelectedImage(it) }
         }
     }
 
@@ -67,7 +78,6 @@ class CreatePostFragment : Fragment() {
     ) { permissions ->
         val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-
         if (fineLocationGranted || coarseLocationGranted) {
             fetchCurrentLocation()
         } else {
@@ -76,11 +86,7 @@ class CreatePostFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_create_post, container, false)
     }
 
@@ -88,6 +94,7 @@ class CreatePostFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        imageCompressor = ImageCompressor(requireContext())
 
         imageCard = view.findViewById(R.id.imageCard)
         selectedImage = view.findViewById(R.id.selectedImage)
@@ -107,9 +114,7 @@ class CreatePostFragment : Fragment() {
     }
 
     private fun setupImagePicker() {
-        imageCard.setOnClickListener {
-            imagePickerLauncher.launch("image/*")
-        }
+        imageCard.setOnClickListener { showImagePickerDialog() }
 
         removeImageButton.setOnClickListener {
             selectedImageUri = null
@@ -117,6 +122,35 @@ class CreatePostFragment : Fragment() {
             addImagePlaceholder.visibility = View.VISIBLE
             removeImageButton.visibility = View.GONE
         }
+    }
+
+    private fun showImagePickerDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Add Photo")
+            .setItems(arrayOf("Take Photo", "Choose from Gallery")) { _, which ->
+                when (which) {
+                    0 -> launchCamera()
+                    1 -> galleryLauncher.launch("image/*")
+                }
+            }
+            .show()
+    }
+
+    private fun launchCamera() {
+        val photoFile = File(requireContext().cacheDir, "camera_${System.currentTimeMillis()}.jpg")
+        cameraImageUri = FileProvider.getUriForFile(
+            requireContext(),
+            "${requireContext().packageName}.fileprovider",
+            photoFile
+        )
+        cameraLauncher.launch(cameraImageUri!!)
+    }
+
+    private fun handleSelectedImage(uri: Uri) {
+        val compressed = imageCompressor.compressImage(uri)
+        val finalUri = if (compressed != null) Uri.fromFile(compressed) else uri
+        selectedImageUri = finalUri
+        showSelectedImage(finalUri)
     }
 
     private fun showSelectedImage(uri: Uri) {
@@ -128,49 +162,31 @@ class CreatePostFragment : Fragment() {
 
     private fun setupLocationSwitch() {
         locationSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                requestLocationPermission()
-            } else {
-                currentLocation = null
-                locationText.visibility = View.GONE
-            }
+            if (isChecked) requestLocationPermission()
+            else { currentLocation = null; locationText.visibility = View.GONE }
         }
     }
 
     private fun requestLocationPermission() {
         when {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                fetchCurrentLocation()
-            }
-            else -> {
-                locationPermissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                )
-            }
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED -> fetchCurrentLocation()
+            else -> locationPermissionLauncher.launch(
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+            )
         }
     }
 
     private fun fetchCurrentLocation() {
         locationProgress.visibility = View.VISIBLE
         locationText.visibility = View.GONE
-
         try {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 locationProgress.visibility = View.GONE
                 if (location != null) {
                     currentLocation = location
                     locationText.visibility = View.VISIBLE
-                    locationText.text = String.format(
-                        "Location: %.4f, %.4f",
-                        location.latitude,
-                        location.longitude
-                    )
+                    locationText.text = String.format("Location: %.4f, %.4f", location.latitude, location.longitude)
                 } else {
                     Snackbar.make(requireView(), "Could not get location", Snackbar.LENGTH_SHORT).show()
                     locationSwitch.isChecked = false
@@ -189,21 +205,17 @@ class CreatePostFragment : Fragment() {
     private fun setupSubmitButton() {
         submitButton.setOnClickListener {
             val text = postTextInput.text?.toString()?.trim()
-
             if (text.isNullOrEmpty()) {
                 Snackbar.make(requireView(), "Please enter some text", Snackbar.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
             val userId = FirebaseAuth.getInstance().currentUser?.uid
             if (userId == null) {
                 Snackbar.make(requireView(), "Please sign in to create a post", Snackbar.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
             submitButton.isEnabled = false
             submitProgress.visibility = View.VISIBLE
-
             viewModel.createPost(
                 userId = userId,
                 text = text,
@@ -223,7 +235,6 @@ class CreatePostFragment : Fragment() {
                         Snackbar.make(requireView(), "Post created!", Snackbar.LENGTH_SHORT).show()
                         findNavController().popBackStack()
                     }
-
                     state.error?.let { error ->
                         submitButton.isEnabled = true
                         submitProgress.visibility = View.GONE
