@@ -6,11 +6,11 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "pending_operations")
 data class PendingOperation(
     @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val operationType: String,
-    val postId: String,
-    val postData: String?,
-    val createdAt: Long = System.currentTimeMillis()
+    var id: Long = 0,
+    var operationType: String = "",
+    var postId: String = "",
+    var postData: String? = null,
+    var createdAt: Long = System.currentTimeMillis()
 ) {
     companion object {
         const val TYPE_CREATE = "CREATE"

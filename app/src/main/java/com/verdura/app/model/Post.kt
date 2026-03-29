@@ -20,16 +20,16 @@ import androidx.room.PrimaryKey
 )
 data class Post(
     @PrimaryKey
-    val id: String = "",
-    val userId: String = "",
-    val text: String = "",
-    val imageUrl: String? = null,
-    val latitude: Double? = null,
-    val longitude: Double? = null,
-    val createdAt: Long = 0L,
-    val updatedAt: Long = 0L,
+    var id: String = "",
+    var userId: String = "",
+    var text: String = "",
+    var imageUrl: String? = null,
+    var latitude: Double? = null,
+    var longitude: Double? = null,
+    var createdAt: Long = 0L,
+    var updatedAt: Long = 0L,
     @Ignore
-    val authorName: String? = null
+    var authorName: String? = null
 ) {
     constructor(
         id: String, userId: String, text: String, imageUrl: String?,

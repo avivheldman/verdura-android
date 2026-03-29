@@ -79,9 +79,8 @@ class FirebasePostRepository(
                 val posts = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(Post::class.java)
                 }?.filter { post ->
-                    post.longitude != null &&
-                    post.longitude >= longitude - lonDelta &&
-                    post.longitude <= longitude + lonDelta
+                    val lon = post.longitude
+                    lon != null && lon >= longitude - lonDelta && lon <= longitude + lonDelta
                 } ?: emptyList()
                 trySend(posts)
             }

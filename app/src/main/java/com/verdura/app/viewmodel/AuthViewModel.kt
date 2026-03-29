@@ -76,7 +76,7 @@ class AuthViewModel(
 
     fun logout() {
         viewModelScope.launch {
-            postDao?.deleteAll()
+            postDao?.deleteAllPosts()
             userDao?.deleteAll()
             authRepository.logout()
         }

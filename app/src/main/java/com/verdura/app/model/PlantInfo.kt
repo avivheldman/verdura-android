@@ -6,12 +6,12 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "plant_info")
 data class PlantInfo(
     @PrimaryKey
-    val id: Int,
-    val commonName: String?,
-    val scientificName: String?,
-    val cycle: String?,
-    val watering: String?,
-    val sunlight: String?,
-    val imageUrl: String?,
-    val cachedAt: Long = System.currentTimeMillis()
+    var id: Int = 0,
+    var commonName: String? = null,
+    var scientificName: String? = null,
+    var cycle: String? = null,
+    var watering: String? = null,
+    var sunlight: String? = null,
+    var imageUrl: String? = null,
+    var cachedAt: Long = System.currentTimeMillis()
 )

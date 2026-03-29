@@ -167,8 +167,10 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
 
             // Add markers for posts with location
             posts.forEach { post ->
-                if (post.latitude != null && post.longitude != null) {
-                    val position = LatLng(post.latitude, post.longitude)
+                val lat = post.latitude
+                val lon = post.longitude
+                if (lat != null && lon != null) {
+                    val position = LatLng(lat, lon)
                     val marker = map.addMarker(
                         MarkerOptions()
                             .position(position)
