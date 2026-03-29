@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        postViewModel // force lazy init before fragments inflate
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         observeAuthState()
