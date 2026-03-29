@@ -33,8 +33,7 @@ class MainActivity : AppCompatActivity() {
         val firebaseRepo = FirebasePostRepository()
         val localRepo = LocalPostRepository(db.postDao())
         val combinedRepo = CombinedPostRepository(
-            localRepo, firebaseRepo, db.postDao(), networkChecker,
-            (application as? com.verdura.app.VerduraApplication)?.offlineSyncManager
+            localRepo, firebaseRepo, db.postDao(), networkChecker
         )
         PostViewModel.Factory(combinedRepo)
     }
