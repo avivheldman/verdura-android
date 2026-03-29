@@ -28,7 +28,7 @@ render.experimental.xml
 *.keystore
 
 # Google Services (e.g. APIs or Firebase)
-google-services.json
+# google-services.json
 
 # API keys
 app/src/main/assets/api_config.properties
