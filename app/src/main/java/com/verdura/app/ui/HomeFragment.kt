@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -28,7 +28,7 @@ class HomeFragment : Fragment() {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var postsRecyclerView: RecyclerView
     private lateinit var emptyStateText: TextView
-    private lateinit var loadingIndicator: ProgressBar
+    private lateinit var loadingIndicator: CircularProgressIndicator
     private lateinit var createPostFab: FloatingActionButton
 
     private lateinit var postAdapter: PostAdapter

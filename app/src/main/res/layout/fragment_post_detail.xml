@@ -118,12 +118,13 @@
             </LinearLayout>
         </LinearLayout>
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/loadingIndicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="24dp"
+            android:indeterminate="true"
             android:visibility="gone" />
     </LinearLayout>
 </ScrollView>

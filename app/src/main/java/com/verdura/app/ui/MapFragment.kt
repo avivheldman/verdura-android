@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -38,7 +38,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
     private var googleMap: GoogleMap? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var myLocationFab: FloatingActionButton
-    private lateinit var loadingIndicator: ProgressBar
+    private lateinit var loadingIndicator: CircularProgressIndicator
 
     private val postMarkers = mutableMapOf<String, Post>()
 

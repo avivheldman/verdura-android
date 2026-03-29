@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -18,6 +17,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
@@ -39,7 +39,7 @@ class PostDetailFragment : Fragment() {
     private lateinit var actionsContainer: LinearLayout
     private lateinit var editButton: MaterialButton
     private lateinit var deleteButton: MaterialButton
-    private lateinit var loadingIndicator: ProgressBar
+    private lateinit var loadingIndicator: CircularProgressIndicator
 
     private var currentPost: Post? = null
 

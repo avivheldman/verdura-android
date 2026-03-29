@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -26,6 +25,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputEditText
@@ -47,9 +47,9 @@ class CreatePostFragment : Fragment() {
     private lateinit var postTextInput: TextInputEditText
     private lateinit var locationSwitch: SwitchMaterial
     private lateinit var locationText: TextView
-    private lateinit var locationProgress: ProgressBar
+    private lateinit var locationProgress: CircularProgressIndicator
     private lateinit var submitButton: MaterialButton
-    private lateinit var submitProgress: ProgressBar
+    private lateinit var submitProgress: CircularProgressIndicator
     private lateinit var imageCard: View
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
