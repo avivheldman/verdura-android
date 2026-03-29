@@ -5,6 +5,7 @@ import java.util.Properties
 
 object ApiConfig {
     private var plantApiKey: String? = null
+    private var trefleToken: String? = null
 
     fun init(context: Context) {
         if (plantApiKey != null) return
@@ -14,14 +15,22 @@ object ApiConfig {
                 properties.load(stream)
             }
             plantApiKey = properties.getProperty("PLANT_API_KEY")
+            trefleToken = properties.getProperty("TREFLE_API_TOKEN")
         } catch (_: Exception) {
             plantApiKey = null
+            trefleToken = null
         }
     }
 
     fun getPlantApiKey(): String {
         return plantApiKey ?: throw IllegalStateException(
-            "Plant API key not configured. Copy api_config.properties.example to api_config.properties and set your key."
+            "Plant API key not configured."
+        )
+    }
+
+    fun getTrefleToken(): String {
+        return trefleToken ?: throw IllegalStateException(
+            "Trefle API token not configured."
         )
     }
 }

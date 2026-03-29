@@ -6,6 +6,8 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="6dp"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp">
 
@@ -20,8 +22,6 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_plant"
-            app:tint="?attr/colorPrimary"
             tools:src="@android:drawable/ic_menu_gallery" />
 
         <LinearLayout
@@ -49,50 +49,15 @@
                 android:textStyle="italic"
                 tools:text="Sansevieria trifasciata" />
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/plantMeta"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/plantCycle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:textColor="?attr/colorPrimary"
-                    tools:text="Perennial" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="6dp"
-                    android:text="·"
-                    android:textColor="@android:color/darker_gray" />
-
-                <TextView
-                    android:id="@+id/plantWatering"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:textColor="@android:color/darker_gray"
-                    tools:text="Minimum" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="6dp"
-                    android:text="·"
-                    android:textColor="@android:color/darker_gray" />
-
-                <TextView
-                    android:id="@+id/plantSunlight"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:textColor="@android:color/darker_gray"
-                    tools:text="Full sun" />
-            </LinearLayout>
+                android:textSize="12sp"
+                android:textColor="@android:color/darker_gray"
+                android:visibility="gone"
+                tools:text="Perennial · Average · Full sun" />
         </LinearLayout>
     </LinearLayout>
 

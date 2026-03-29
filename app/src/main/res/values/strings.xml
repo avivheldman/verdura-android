@@ -58,8 +58,8 @@
     <string name="pull_to_refresh">Pull to refresh</string>
 
     <!-- External Data -->
-    <string name="plant_info">Plant Information</string>
-    <string name="search_plants">Search plants</string>
+    <string name="plant_info">Houseplant Guide</string>
+    <string name="search_plants">Search houseplants</string>
     <string name="no_results">No results found</string>
     <string name="external_data">Explore</string>
 
