@@ -17,12 +17,20 @@
         android:orientation="horizontal"
         android:padding="12dp">
 
-        <ImageView
-            android:id="@+id/plantImage"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:scaleType="centerCrop"
-            tools:src="@android:drawable/ic_menu_gallery" />
+            app:cardCornerRadius="10dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <ImageView
+                android:id="@+id/plantImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                tools:src="@android:drawable/ic_menu_gallery" />
+        </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -35,6 +43,8 @@
                 android:id="@+id/plantName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 tools:text="Snake Plant" />
@@ -43,21 +53,66 @@
                 android:id="@+id/plantScientificName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="1dp"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:textColor="@android:color/darker_gray"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textStyle="italic"
                 tools:text="Sansevieria trifasciata" />
 
-            <TextView
-                android:id="@+id/plantMeta"
+            <LinearLayout
+                android:id="@+id/badgesRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:textSize="12sp"
-                android:textColor="@android:color/darker_gray"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
                 android:visibility="gone"
-                tools:text="Perennial · Average · Full sun" />
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/badgeCycle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_badge_cycle"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:textColor="#2E7D32"
+                    android:textSize="11sp"
+                    android:visibility="gone"
+                    tools:text="Perennial"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/badgeWatering"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_badge_water"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:textColor="#1565C0"
+                    android:textSize="11sp"
+                    android:visibility="gone"
+                    tools:text="Average"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/badgeSunlight"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_badge_sun"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:textColor="#F57F17"
+                    android:textSize="11sp"
+                    android:visibility="gone"
+                    tools:text="Full sun"
+                    tools:visibility="visible" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 

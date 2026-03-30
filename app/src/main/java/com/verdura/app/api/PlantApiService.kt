@@ -12,7 +12,9 @@ interface PlantApiService {
     suspend fun getPlantList(
         @Query("key") apiKey: String,
         @Query("page") page: Int = 1,
-        @Query("q") query: String? = null
+        @Query("q") query: String? = null,
+        @Query("per_page") perPage: Int = 60,
+        @Query("indoor") indoor: Int = 1
     ): PlantListResponse
 
     @GET("species/details/{id}")

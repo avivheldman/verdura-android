@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.verdura.app.model.PlantInfo
 import com.verdura.app.repository.PlantRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,31 +23,84 @@ class PlantViewModel(
     val uiState: StateFlow<PlantUiState> = _uiState.asStateFlow()
 
     private var currentPage = 1
+    private var lastPage = Int.MAX_VALUE
+    private var currentQuery: String? = null
+    private var loadJob: Job? = null
+    private var paginationJob: Job? = null
+    private var prefetchJob: Job? = null
 
     init {
         loadPlants()
     }
 
     fun loadPlants(query: String? = null) {
+        loadJob?.cancel()
+        prefetchJob?.cancel()
         currentPage = 1
-        viewModelScope.launch {
+        lastPage = Int.MAX_VALUE
+        currentQuery = query
+        loadJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            val result = plantRepository.fetchPlantsFromApi(query, currentPage)
+            val result = plantRepository.fetchPlantsWithCache(query, currentPage)
             result.fold(
-                onSuccess = { plants ->
-                    _plants.value = plants
-                    _uiState.update { it.copy(isLoading = false) }
+                onSuccess = { (plants, totalPages) ->
+                    lastPage = totalPages
+                    _plants.value = rankByRelevance(plants, query)
+                    _uiState.update { it.copy(isLoading = false, hasMorePages = currentPage < lastPage) }
+                    enrichPlantData(query)
                 },
                 onFailure = { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
-                    viewModelScope.launch {
-                        plantRepository.getCachedPlants().collect { cached ->
-                            if (cached.isNotEmpty()) _plants.value = cached
-                        }
+                    val cached = plantRepository.getCachedPlantsOnce(query)
+                    if (cached.isNotEmpty()) {
+                        _plants.value = rankByRelevance(cached, query)
+                        _uiState.update { it.copy(isLoading = false, hasMorePages = false) }
+                        enrichPlantData(query)
+                    } else {
+                        _uiState.update { it.copy(isLoading = false, error = e.message, hasMorePages = false) }
                     }
                 }
             )
         }
+    }
+
+    private fun enrichPlantData(query: String?) {
+        prefetchJob?.cancel()
+        prefetchJob = viewModelScope.launch {
+            val genusFilled = plantRepository.backfillFromGenusFallback()
+            if (genusFilled > 0) refreshList(query)
+
+            val backfilled = plantRepository.backfillFromCachedDetails()
+            if (backfilled > 0) refreshList(query)
+
+            delay(500)
+            plantRepository.prefetchCareFromTrefle(
+                limit = 60,
+                batchSize = 5
+            ) {
+                refreshList(query)
+            }
+        }
+    }
+
+    private suspend fun refreshList(query: String?) {
+        val updated = plantRepository.getCachedPlantsOnce(query)
+        if (updated.isNotEmpty()) {
+            _plants.value = rankByRelevance(updated, query)
+        }
+    }
+
+    private fun rankByRelevance(plants: List<PlantInfo>, query: String?): List<PlantInfo> {
+        if (query.isNullOrBlank()) return plants
+        val q = query.lowercase()
+        return plants.sortedWith(compareBy { plant ->
+            val name = plant.commonName?.lowercase() ?: ""
+            when {
+                name.equals(q, ignoreCase = true) -> 0
+                name.startsWith(q) -> 1
+                name.contains(" $q") -> 2
+                else -> 3
+            }
+        })
     }
 
     fun searchPlants(query: String) {
@@ -56,19 +111,23 @@ class PlantViewModel(
         loadPlants(query)
     }
 
-    fun loadNextPage(query: String? = null) {
+    fun loadNextPage() {
+        if (paginationJob?.isActive == true) return
+        if (currentPage >= lastPage) return
+
         currentPage++
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            val result = plantRepository.fetchPlantsFromApi(query, currentPage)
+        paginationJob = viewModelScope.launch {
+            _uiState.update { it.copy(isPaginating = true, error = null) }
+            val result = plantRepository.fetchPlantsFromApi(currentQuery, currentPage)
             result.fold(
-                onSuccess = { newPlants ->
+                onSuccess = { (newPlants, totalPages) ->
+                    lastPage = totalPages
                     _plants.value = _plants.value + newPlants
-                    _uiState.update { it.copy(isLoading = false) }
+                    _uiState.update { it.copy(isPaginating = false, hasMorePages = currentPage < lastPage) }
                 },
                 onFailure = { e ->
                     currentPage--
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                    _uiState.update { it.copy(isPaginating = false, error = e.message) }
                 }
             )
         }
@@ -81,5 +140,7 @@ class PlantViewModel(
 
 data class PlantUiState(
     val isLoading: Boolean = false,
+    val isPaginating: Boolean = false,
+    val hasMorePages: Boolean = true,
     val error: String? = null
 )

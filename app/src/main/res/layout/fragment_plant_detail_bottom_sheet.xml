@@ -189,7 +189,7 @@
 
             </LinearLayout>
 
-            <!-- Care Details (Trefle bonus) -->
+            <!-- Care Details (from Trefle) -->
             <TextView
                 android:id="@+id/careInfoHeading"
                 android:layout_width="match_parent"

@@ -32,6 +32,7 @@ data class TrefleSpeciesDetail(
     @SerializedName("family") val family: String?,
     @SerializedName("family_common_name") val familyCommonName: String?,
     @SerializedName("genus") val genus: String?,
+    @SerializedName("observations") val observations: String?,
     @SerializedName("duration") val duration: List<String>?,
     @SerializedName("edible") val edible: Boolean?,
     @SerializedName("edible_part") val ediblePart: List<String>?,
