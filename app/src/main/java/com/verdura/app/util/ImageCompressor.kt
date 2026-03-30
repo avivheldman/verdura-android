@@ -76,8 +76,4 @@ class ImageCompressor(private val context: Context) {
         bitmap.recycle()
         return outputFile
     }
-
-    fun getCompressedImageSize(file: File): Long {
-        return file.length()
-    }
 }

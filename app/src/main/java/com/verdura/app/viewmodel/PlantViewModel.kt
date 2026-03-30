@@ -72,9 +72,9 @@ class PlantViewModel(
             val backfilled = plantRepository.backfillFromCachedDetails()
             if (backfilled > 0) refreshList(query)
 
-            delay(500)
+            delay(300)
             plantRepository.prefetchCareFromTrefle(
-                limit = 60,
+                limit = 30,
                 batchSize = 5
             ) {
                 refreshList(query)

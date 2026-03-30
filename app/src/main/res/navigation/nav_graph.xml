@@ -64,22 +64,6 @@
             app:argType="string" />
     </fragment>
 
-    <!-- Map -->
-    <fragment
-        android:id="@+id/mapFragment"
-        android:name="com.verdura.app.ui.MapFragment"
-        android:label="Map"
-        tools:layout="@layout/fragment_map">
-
-        <action
-            android:id="@+id/action_map_to_postDetail"
-            app:destination="@id/postDetailFragment">
-            <argument
-                android:name="postId"
-                app:argType="string" />
-        </action>
-    </fragment>
-
     <!-- Plant Explore (External API) -->
     <fragment
         android:id="@+id/plantExploreFragment"

@@ -32,7 +32,7 @@ class PlantExploreFragment : Fragment() {
 
     private val viewModel: PlantViewModel by activityViewModels {
         val db = AppDatabase.getInstance(requireContext())
-        PlantViewModelFactory(PlantRepository(db.plantInfoDao(), db.plantDetailCacheDao(), db.trefleDetailCacheDao()))
+        PlantViewModelFactory(PlantRepository(db.plantInfoDao(), db.trefleDetailCacheDao()))
     }
 
     private lateinit var searchEditText: TextInputEditText

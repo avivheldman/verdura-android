@@ -29,10 +29,14 @@ data class Post(
     var createdAt: Long = 0L,
     var updatedAt: Long = 0L,
     @Ignore
-    var authorName: String? = null
+    var authorName: String? = null,
+    @Ignore
+    var likedBy: List<String> = emptyList(),
+    @Ignore
+    var comments: List<Comment> = emptyList()
 ) {
     constructor(
         id: String, userId: String, text: String, imageUrl: String?,
         latitude: Double?, longitude: Double?, createdAt: Long, updatedAt: Long
-    ) : this(id, userId, text, imageUrl, latitude, longitude, createdAt, updatedAt, null)
+    ) : this(id, userId, text, imageUrl, latitude, longitude, createdAt, updatedAt, null, emptyList(), emptyList())
 }

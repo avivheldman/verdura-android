@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "725367533415",
-    "project_id": "verdura-d439d",
-    "storage_bucket": "verdura-d439d.firebasestorage.app"
+    "project_number": "380527893522",
+    "project_id": "verdura-3f690",
+    "storage_bucket": "verdura-3f690.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:725367533415:android:31a22ec4c99295ecfa89c2",
+        "mobilesdk_app_id": "1:380527893522:android:556a59bfc4a06435e04ccb",
         "android_client_info": {
           "package_name": "com.verdura.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDG-QZ8vgqS2N5OHOQZAPkrNS9UZGdIr0w"
+          "current_key": "AIzaSyAbbb6vKalvja8WgNWeRaJgNIgP0oAyXR0"
         }
       ],
       "services": {

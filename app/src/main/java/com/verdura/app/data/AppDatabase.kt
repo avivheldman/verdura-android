@@ -6,7 +6,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.verdura.app.model.CachedPlantDetail
 import com.verdura.app.model.CachedTrefleDetail
 import com.verdura.app.model.PendingOperation
 import com.verdura.app.model.PlantInfo
@@ -14,8 +13,8 @@ import com.verdura.app.model.Post
 import com.verdura.app.model.User
 
 @Database(
-    entities = [User::class, Post::class, PendingOperation::class, PlantInfo::class, CachedPlantDetail::class, CachedTrefleDetail::class],
-    version = 7,
+    entities = [User::class, Post::class, PendingOperation::class, PlantInfo::class, CachedTrefleDetail::class],
+    version = 8,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,7 +23,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun pendingOperationDao(): PendingOperationDao
     abstract fun plantInfoDao(): PlantInfoDao
-    abstract fun plantDetailCacheDao(): PlantDetailCacheDao
     abstract fun trefleDetailCacheDao(): TrefleDetailCacheDao
 
     companion object {
@@ -99,6 +97,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS cached_plant_details")
+                db.execSQL("DELETE FROM plant_info")
+                db.execSQL("DELETE FROM cached_trefle_details")
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -109,7 +115,10 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(
+                        MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4,
+                        MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8
+                    )
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

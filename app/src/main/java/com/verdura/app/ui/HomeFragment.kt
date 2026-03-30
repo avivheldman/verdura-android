@@ -61,10 +61,6 @@ class HomeFragment : Fragment() {
             onPostClick = { post ->
                 val action = HomeFragmentDirections.actionHomeToPostDetail(post.id)
                 findNavController().navigate(action)
-            },
-            onPostLongClick = { post ->
-                showPostOptions(post.id)
-                true
             }
         )
         postsRecyclerView.adapter = postAdapter
@@ -109,10 +105,5 @@ class HomeFragment : Fragment() {
                 }
             }
         }
-    }
-
-    private fun showPostOptions(postId: String) {
-        val action = HomeFragmentDirections.actionHomeToPostDetail(postId)
-        findNavController().navigate(action)
     }
 }

@@ -1,9 +1,9 @@
 package com.verdura.app.repository
 
 import com.verdura.app.data.PostDao
+import com.verdura.app.model.Comment
 import com.verdura.app.model.Post
 import kotlinx.coroutines.flow.Flow
-import kotlin.math.cos
 
 class LocalPostRepository(
     private val postDao: PostDao
@@ -19,18 +19,6 @@ class LocalPostRepository(
 
     override fun getPostById(postId: String): Flow<Post?> {
         return postDao.getPostById(postId)
-    }
-
-    override fun getPostsNearLocation(latitude: Double, longitude: Double, radiusKm: Double): Flow<List<Post>> {
-        val latDelta = radiusKm / 111.0
-        val lonDelta = radiusKm / (111.0 * cos(Math.toRadians(latitude)))
-
-        return postDao.getPostsInBounds(
-            minLat = latitude - latDelta,
-            maxLat = latitude + latDelta,
-            minLon = longitude - lonDelta,
-            maxLon = longitude + lonDelta
-        )
     }
 
     override suspend fun createPost(post: Post): Result<Post> {
@@ -66,5 +54,17 @@ class LocalPostRepository(
 
     override suspend fun syncPosts(): Result<Unit> {
         return Result.success(Unit)
+    }
+
+    override suspend fun likePost(postId: String, userId: String): Result<Unit> {
+        return Result.failure(Exception("Local repository does not support likes"))
+    }
+
+    override suspend fun unlikePost(postId: String, userId: String): Result<Unit> {
+        return Result.failure(Exception("Local repository does not support likes"))
+    }
+
+    override suspend fun addComment(postId: String, comment: Comment): Result<Unit> {
+        return Result.failure(Exception("Local repository does not support comments"))
     }
 }

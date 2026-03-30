@@ -67,6 +67,31 @@ class ProfileViewModel(
         }
     }
 
+    fun saveProfile(userId: String, name: String, photoUri: Uri?) {
+        _isLoading.value = true
+        viewModelScope.launch {
+            var updatedUser = _user.value?.copy(displayName = name) ?: return@launch
+
+            if (photoUri != null) {
+                val photoResult = userRepository.updateProfilePhoto(userId, photoUri)
+                photoResult.fold(
+                    onSuccess = { downloadUrl -> updatedUser = updatedUser.copy(photoUrl = downloadUrl) },
+                    onFailure = { _error.value = it.message; _isLoading.value = false; return@launch }
+                )
+            }
+
+            val result = userRepository.updateUser(updatedUser)
+            result.fold(
+                onSuccess = {
+                    _user.value = it
+                    _updateSuccess.value = true
+                },
+                onFailure = { _error.value = it.message }
+            )
+            _isLoading.value = false
+        }
+    }
+
     fun clearError() {
         _error.value = null
     }

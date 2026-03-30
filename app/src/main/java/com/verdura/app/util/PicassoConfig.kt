@@ -41,14 +41,4 @@ object PicassoConfig {
         Picasso.setSingletonInstance(picasso)
         isInitialized = true
     }
-
-    fun clearCache(context: Context) {
-        val cacheDir = File(context.cacheDir, "picasso_cache")
-        if (cacheDir.exists()) {
-            cacheDir.deleteRecursively()
-        }
-        Picasso.get().shutdown()
-        isInitialized = false
-        initialize(context)
-    }
 }

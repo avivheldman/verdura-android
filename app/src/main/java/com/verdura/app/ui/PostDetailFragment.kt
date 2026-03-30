@@ -16,12 +16,16 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.bumptech.glide.Glide
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.squareup.picasso.Picasso
 import com.verdura.app.R
+import com.verdura.app.model.Comment
 import com.verdura.app.model.Post
 import com.verdura.app.viewmodel.PostViewModel
 import kotlinx.coroutines.launch
@@ -31,6 +35,8 @@ class PostDetailFragment : Fragment() {
     private val viewModel: PostViewModel by activityViewModels()
     private val args: PostDetailFragmentArgs by navArgs()
 
+    private lateinit var authorImage: ImageView
+    private lateinit var authorName: TextView
     private lateinit var postImage: ImageView
     private lateinit var postText: TextView
     private lateinit var locationContainer: LinearLayout
@@ -40,7 +46,15 @@ class PostDetailFragment : Fragment() {
     private lateinit var editButton: MaterialButton
     private lateinit var deleteButton: MaterialButton
     private lateinit var loadingIndicator: CircularProgressIndicator
+    private lateinit var likeButton: ImageView
+    private lateinit var likeCountText: TextView
+    private lateinit var commentsHeader: TextView
+    private lateinit var commentsContainer: LinearLayout
+    private lateinit var noCommentsText: TextView
+    private lateinit var commentInput: TextInputEditText
+    private lateinit var sendCommentButton: MaterialButton
 
+    private val firestore = FirebaseFirestore.getInstance()
     private var currentPost: Post? = null
 
     override fun onCreateView(
@@ -54,6 +68,8 @@ class PostDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        authorImage = view.findViewById(R.id.authorImage)
+        authorName = view.findViewById(R.id.authorName)
         postImage = view.findViewById(R.id.postImage)
         postText = view.findViewById(R.id.postText)
         locationContainer = view.findViewById(R.id.locationContainer)
@@ -63,8 +79,17 @@ class PostDetailFragment : Fragment() {
         editButton = view.findViewById(R.id.editButton)
         deleteButton = view.findViewById(R.id.deleteButton)
         loadingIndicator = view.findViewById(R.id.loadingIndicator)
+        likeButton = view.findViewById(R.id.likeButton)
+        likeCountText = view.findViewById(R.id.likeCountText)
+        commentsHeader = view.findViewById(R.id.commentsHeader)
+        commentsContainer = view.findViewById(R.id.commentsContainer)
+        noCommentsText = view.findViewById(R.id.noCommentsText)
+        commentInput = view.findViewById(R.id.commentInput)
+        sendCommentButton = view.findViewById(R.id.sendCommentButton)
 
         setupButtons()
+        setupLikeButton()
+        setupCommentInput()
         observeViewModel()
         viewModel.loadPostById(args.postId)
     }
@@ -124,10 +149,41 @@ class PostDetailFragment : Fragment() {
         }
     }
 
+    private fun setupLikeButton() {
+        likeButton.setOnClickListener {
+            val post = currentPost ?: return@setOnClickListener
+            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@setOnClickListener
+            val isLiked = post.likedBy.contains(userId)
+            viewModel.toggleLike(post.id, userId, isLiked)
+        }
+    }
+
+    private fun setupCommentInput() {
+        sendCommentButton.setOnClickListener {
+            val post = currentPost ?: return@setOnClickListener
+            val user = FirebaseAuth.getInstance().currentUser ?: return@setOnClickListener
+            val text = commentInput.text?.toString()?.trim()
+            if (text.isNullOrEmpty()) {
+                Snackbar.make(requireView(), "Please enter a comment", Snackbar.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            viewModel.addComment(
+                postId = post.id,
+                userId = user.uid,
+                userName = user.displayName ?: "Anonymous",
+                text = text
+            )
+            commentInput.text?.clear()
+        }
+    }
+
     private fun displayPost(post: Post) {
         currentPost = post
 
         postText.text = post.text
+        loadAuthor(post.userId)
+        displayLikes(post)
+        displayComments(post.comments)
 
         if (!post.imageUrl.isNullOrEmpty()) {
             postImage.visibility = View.VISIBLE
@@ -147,13 +203,89 @@ class PostDetailFragment : Fragment() {
             locationContainer.visibility = View.GONE
         }
 
-        timestampText.text = "Created ${DateUtils.getRelativeTimeSpanString(
+        timestampText.text = DateUtils.getRelativeTimeSpanString(
             post.createdAt,
             System.currentTimeMillis(),
             DateUtils.MINUTE_IN_MILLIS
-        )}"
+        ).toString()
 
         val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
         actionsContainer.visibility = if (post.userId == currentUserId) View.VISIBLE else View.GONE
+    }
+
+    private fun displayLikes(post: Post) {
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+        val isLiked = currentUserId != null && post.likedBy.contains(currentUserId)
+        likeButton.setImageResource(
+            if (isLiked) R.drawable.ic_heart_filled else R.drawable.ic_heart_outline
+        )
+        val count = post.likedBy.size
+        likeCountText.text = if (count == 1) "1 like" else "$count likes"
+    }
+
+    private fun displayComments(comments: List<Comment>) {
+        commentsHeader.text = "Comments (${comments.size})"
+        commentsContainer.removeAllViews()
+
+        if (comments.isEmpty()) {
+            noCommentsText.visibility = View.VISIBLE
+            return
+        }
+        noCommentsText.visibility = View.GONE
+
+        for (comment in comments.sortedByDescending { it.timestamp }) {
+            val commentView = LayoutInflater.from(requireContext())
+                .inflate(android.R.layout.simple_list_item_2, commentsContainer, false)
+
+            val nameView = commentView.findViewById<TextView>(android.R.id.text1)
+            val textView = commentView.findViewById<TextView>(android.R.id.text2)
+
+            nameView.text = comment.userName
+            nameView.textSize = 13f
+            nameView.setTextColor(resources.getColor(android.R.color.black, null))
+
+            textView.text = comment.text
+            textView.textSize = 14f
+
+            commentsContainer.addView(commentView)
+        }
+    }
+
+    private fun loadAuthor(userId: String) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null && currentUser.uid == userId) {
+            authorName.text = currentUser.displayName ?: "You"
+            currentUser.photoUrl?.let { url ->
+                Glide.with(this)
+                    .load(url.toString())
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_person)
+                    .into(authorImage)
+            } ?: Glide.with(this)
+                .load(R.drawable.ic_person)
+                .circleCrop()
+                .into(authorImage)
+            return
+        }
+
+        authorName.text = ""
+        firestore.collection("users").document(userId).get()
+            .addOnSuccessListener { doc ->
+                if (!isAdded) return@addOnSuccessListener
+                authorName.text = doc.getString("displayName") ?: "Unknown"
+                val photoUrl = doc.getString("photoUrl")
+                if (!photoUrl.isNullOrEmpty()) {
+                    Glide.with(this)
+                        .load(photoUrl)
+                        .circleCrop()
+                        .placeholder(R.drawable.ic_person)
+                        .into(authorImage)
+                } else {
+                    Glide.with(this)
+                        .load(R.drawable.ic_person)
+                        .circleCrop()
+                        .into(authorImage)
+                }
+            }
     }
 }

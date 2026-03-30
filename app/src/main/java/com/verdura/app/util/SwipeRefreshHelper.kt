@@ -2,14 +2,9 @@ package com.verdura.app.util
 
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
-/**
- * Helper class for setting up SwipeRefreshLayout consistently across fragments
- */
+// Consistent SwipeRefreshLayout configuration across fragments
 object SwipeRefreshHelper {
 
-    /**
-     * Configure SwipeRefreshLayout with app theme colors and refresh action
-     */
     fun setup(
         swipeRefreshLayout: SwipeRefreshLayout,
         onRefresh: () -> Unit
@@ -26,16 +21,10 @@ object SwipeRefreshHelper {
         }
     }
 
-    /**
-     * Stop the refresh animation
-     */
     fun stopRefreshing(swipeRefreshLayout: SwipeRefreshLayout) {
         swipeRefreshLayout.isRefreshing = false
     }
 
-    /**
-     * Start the refresh animation programmatically
-     */
     fun startRefreshing(swipeRefreshLayout: SwipeRefreshLayout) {
         swipeRefreshLayout.isRefreshing = true
     }

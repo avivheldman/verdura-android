@@ -15,16 +15,6 @@ interface PostDao {
     @Query("SELECT * FROM posts WHERE id = :postId")
     fun getPostById(postId: String): Flow<Post?>
 
-    @Query("""
-        SELECT * FROM posts
-        WHERE latitude IS NOT NULL
-        AND longitude IS NOT NULL
-        AND latitude BETWEEN :minLat AND :maxLat
-        AND longitude BETWEEN :minLon AND :maxLon
-        ORDER BY createdAt DESC
-    """)
-    fun getPostsInBounds(minLat: Double, maxLat: Double, minLon: Double, maxLon: Double): Flow<List<Post>>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPost(post: Post)
 

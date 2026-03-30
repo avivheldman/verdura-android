@@ -6,10 +6,6 @@ import com.verdura.app.model.PendingOperation
 import com.verdura.app.model.Post
 import com.verdura.app.repository.FirebasePostRepository
 import com.verdura.app.repository.NetworkChecker
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
 
 class OfflineSyncManager(
     private val pendingOperationDao: PendingOperationDao,
@@ -17,21 +13,6 @@ class OfflineSyncManager(
     private val networkChecker: NetworkChecker
 ) {
     private val gson = Gson()
-    private val scope = CoroutineScope(Dispatchers.IO)
-
-    fun getPendingOperationsCount(): Flow<Int> {
-        return pendingOperationDao.getPendingOperationsCount()
-    }
-
-    suspend fun queueOperation(type: String, postId: String, post: Post? = null) {
-        val postData = post?.let { gson.toJson(it) }
-        val operation = PendingOperation(
-            operationType = type,
-            postId = postId,
-            postData = postData
-        )
-        pendingOperationDao.insert(operation)
-    }
 
     suspend fun syncPendingOperations(): Result<Int> {
         if (!networkChecker.isNetworkAvailable()) {
@@ -68,13 +49,5 @@ class OfflineSyncManager(
         }
 
         return Result.success(successCount)
-    }
-
-    fun startAutoSync() {
-        scope.launch {
-            if (networkChecker.isNetworkAvailable()) {
-                syncPendingOperations()
-            }
-        }
     }
 }

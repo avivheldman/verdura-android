@@ -1,15 +1,16 @@
 package com.verdura.app.repository
 
 import android.net.Uri
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
+import com.verdura.app.model.Comment
 import com.verdura.app.model.Post
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import kotlin.math.cos
 
 class FirebasePostRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
@@ -64,29 +65,6 @@ class FirebasePostRepository(
         awaitClose { listener.remove() }
     }
 
-    override fun getPostsNearLocation(latitude: Double, longitude: Double, radiusKm: Double): Flow<List<Post>> = callbackFlow {
-        val latDelta = radiusKm / 111.0
-        val lonDelta = radiusKm / (111.0 * cos(Math.toRadians(latitude)))
-
-        val listener = postsCollection
-            .whereGreaterThanOrEqualTo("latitude", latitude - latDelta)
-            .whereLessThanOrEqualTo("latitude", latitude + latDelta)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                val posts = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Post::class.java)
-                }?.filter { post ->
-                    val lon = post.longitude
-                    lon != null && lon >= longitude - lonDelta && lon <= longitude + lonDelta
-                } ?: emptyList()
-                trySend(posts)
-            }
-        awaitClose { listener.remove() }
-    }
-
     override suspend fun createPost(post: Post): Result<Post> {
         return try {
             postsCollection.document(post.id).set(post).await()
@@ -132,5 +110,44 @@ class FirebasePostRepository(
 
     override suspend fun syncPosts(): Result<Unit> {
         return Result.success(Unit)
+    }
+
+    override suspend fun likePost(postId: String, userId: String): Result<Unit> {
+        return try {
+            postsCollection.document(postId)
+                .update("likedBy", FieldValue.arrayUnion(userId))
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun unlikePost(postId: String, userId: String): Result<Unit> {
+        return try {
+            postsCollection.document(postId)
+                .update("likedBy", FieldValue.arrayRemove(userId))
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun addComment(postId: String, comment: Comment): Result<Unit> {
+        return try {
+            val commentMap = mapOf(
+                "userId" to comment.userId,
+                "userName" to comment.userName,
+                "text" to comment.text,
+                "timestamp" to comment.timestamp
+            )
+            postsCollection.document(postId)
+                .update("comments", FieldValue.arrayUnion(commentMap))
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

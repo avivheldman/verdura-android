@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.verdura.app.model.Comment
 import com.verdura.app.model.Post
 import com.verdura.app.repository.PostRepository
 import kotlinx.coroutines.flow.*
@@ -22,9 +23,6 @@ class PostViewModel(
 
     private val _selectedPost = MutableStateFlow<Post?>(null)
     val selectedPost: StateFlow<Post?> = _selectedPost.asStateFlow()
-
-    private val _nearbyPosts = MutableStateFlow<List<Post>>(emptyList())
-    val nearbyPosts: StateFlow<List<Post>> = _nearbyPosts.asStateFlow()
 
     init {
         loadAllPosts()
@@ -72,26 +70,10 @@ class PostViewModel(
         }
     }
 
-    fun loadPostsNearLocation(latitude: Double, longitude: Double, radiusKm: Double = 10.0) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            try {
-                postRepository.getPostsNearLocation(latitude, longitude, radiusKm).collect { postList ->
-                    _nearbyPosts.value = postList
-                    _uiState.update { it.copy(isLoading = false) }
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
-            }
-        }
-    }
-
     fun createPost(
         userId: String,
         text: String,
-        imageUri: Uri? = null,
-        latitude: Double? = null,
-        longitude: Double? = null
+        imageUri: Uri? = null
     ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
@@ -113,8 +95,6 @@ class PostViewModel(
                 userId = userId,
                 text = text,
                 imageUrl = imageUrl,
-                latitude = latitude,
-                longitude = longitude,
                 createdAt = currentTime,
                 updatedAt = currentTime
             )
@@ -179,6 +159,34 @@ class PostViewModel(
 
     suspend fun uploadImage(postId: String, imageUri: Uri): Result<String> {
         return postRepository.uploadPostImage(postId, imageUri)
+    }
+
+    fun toggleLike(postId: String, userId: String, isCurrentlyLiked: Boolean) {
+        viewModelScope.launch {
+            val result = if (isCurrentlyLiked) {
+                postRepository.unlikePost(postId, userId)
+            } else {
+                postRepository.likePost(postId, userId)
+            }
+            result.onFailure { e ->
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun addComment(postId: String, userId: String, userName: String, text: String) {
+        viewModelScope.launch {
+            val comment = Comment(
+                userId = userId,
+                userName = userName,
+                text = text,
+                timestamp = System.currentTimeMillis()
+            )
+            val result = postRepository.addComment(postId, comment)
+            result.onFailure { e ->
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
     }
 
     fun clearError() {

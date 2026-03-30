@@ -63,7 +63,6 @@
     <string name="no_results">No results found</string>
     <string name="external_data">Explore</string>
 
-    <!-- Map -->
-    <string name="map">Map</string>
+    <!-- General Sync -->
     <string name="offline_pending">%d pending changes will sync when online</string>
 </resources>

@@ -49,7 +49,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Tap to add photo"
+                        android:text="Tap to add a photo of your plant"
                         android:textColor="@android:color/white" />
                 </LinearLayout>
 
@@ -78,35 +78,11 @@
                 android:id="@+id/postTextInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="What did you discover?"
+                android:hint="Tell us about this plant..."
                 android:inputType="textMultiLine"
                 android:minLines="4"
                 android:maxLength="500" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/locationSwitch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Add Location" />
-
-        <TextView
-            android:id="@+id/locationText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@android:color/darker_gray"
-            android:textSize="14sp"
-            android:visibility="gone" />
-
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:id="@+id/locationProgress"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginTop="8dp"
-            android:indeterminate="true"
-            android:visibility="gone" />
 
         <View
             android:layout_width="match_parent"

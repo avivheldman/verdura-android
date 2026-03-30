@@ -4,11 +4,20 @@ import com.google.gson.annotations.SerializedName
 
 data class TrefleSearchResponse(
     @SerializedName("data") val data: List<TrefleSpeciesSummary>,
+    @SerializedName("links") val links: TrefleLinks?,
     @SerializedName("meta") val meta: TrefleMeta?
 )
 
 data class TrefleSpeciesResponse(
     @SerializedName("data") val data: TrefleSpeciesDetail
+)
+
+data class TrefleLinks(
+    @SerializedName("first") val first: String?,
+    @SerializedName("last") val last: String?,
+    @SerializedName("next") val next: String?,
+    @SerializedName("prev") val prev: String?,
+    @SerializedName("self") val self: String?
 )
 
 data class TrefleMeta(
@@ -36,11 +45,22 @@ data class TrefleSpeciesDetail(
     @SerializedName("duration") val duration: List<String>?,
     @SerializedName("edible") val edible: Boolean?,
     @SerializedName("edible_part") val ediblePart: List<String>?,
+    @SerializedName("distributions") val distributions: TrefleDistributions?,
     @SerializedName("flower") val flower: TrefleFlower?,
     @SerializedName("foliage") val foliage: TrefleFoliage?,
     @SerializedName("specifications") val specifications: TrefleSpecifications?,
     @SerializedName("growth") val growth: TrefleGrowth?,
     @SerializedName("images") val images: TrefleImages?
+)
+
+data class TrefleDistributions(
+    @SerializedName("native") val native: List<TrefleDistributionZone>?,
+    @SerializedName("introduced") val introduced: List<TrefleDistributionZone>?
+)
+
+data class TrefleDistributionZone(
+    @SerializedName("name") val name: String?,
+    @SerializedName("tdwg_code") val tdwgCode: String?
 )
 
 data class TrefleFlower(

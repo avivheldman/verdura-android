@@ -91,8 +91,7 @@ class EditProfileFragment : Fragment() {
             binding.nameInputLayout.error = getString(R.string.error_name_required)
             return
         }
-        selectedPhotoUri?.let { viewModel.updateProfilePhoto(userId, it) }
-        viewModel.user.value?.copy(displayName = name)?.let { viewModel.updateUser(it) }
+        viewModel.saveProfile(userId, name, selectedPhotoUri)
     }
 
     override fun onDestroyView() { super.onDestroyView(); _binding = null }

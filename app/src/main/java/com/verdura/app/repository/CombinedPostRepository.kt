@@ -1,6 +1,7 @@
 package com.verdura.app.repository
 
 import com.verdura.app.data.PostDao
+import com.verdura.app.model.Comment
 import com.verdura.app.model.Post
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -40,16 +41,6 @@ class CombinedPostRepository(
             }
         } else {
             localRepository.getPostById(postId)
-        }
-    }
-
-    override fun getPostsNearLocation(latitude: Double, longitude: Double, radiusKm: Double): Flow<List<Post>> {
-        return if (networkChecker.isNetworkAvailable()) {
-            firebaseRepository.getPostsNearLocation(latitude, longitude, radiusKm).onEach { posts ->
-                postDao.insertPosts(posts)
-            }
-        } else {
-            localRepository.getPostsNearLocation(latitude, longitude, radiusKm)
         }
     }
 
@@ -98,6 +89,18 @@ class CombinedPostRepository(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun likePost(postId: String, userId: String): Result<Unit> {
+        return firebaseRepository.likePost(postId, userId)
+    }
+
+    override suspend fun unlikePost(postId: String, userId: String): Result<Unit> {
+        return firebaseRepository.unlikePost(postId, userId)
+    }
+
+    override suspend fun addComment(postId: String, comment: Comment): Result<Unit> {
+        return firebaseRepository.addComment(postId, comment)
     }
 }
 

@@ -69,9 +69,6 @@ interface PlantInfoDao {
         WHERE id = :plantId""")
     suspend fun updateDetailFields(plantId: Int, cycle: String?, watering: String?, sunlight: String?)
 
-    @Query("SELECT id FROM plant_info WHERE (cycle IS NULL OR cycle = '') AND (watering IS NULL OR watering = '') AND (sunlight IS NULL OR sunlight = '') LIMIT :limit")
-    suspend fun getPlantIdsMissingData(limit: Int = 10): List<Int>
-
     @Query("""SELECT * FROM plant_info 
         WHERE scientificName IS NOT NULL AND scientificName != ''
           AND ((cycle IS NULL OR cycle = '') AND (watering IS NULL OR watering = '') AND (sunlight IS NULL OR sunlight = ''))

@@ -101,7 +101,6 @@ class AuthViewModel(
         _resetPasswordResult.value = null
     }
 
-    fun getCurrentUserId(): String? = authRepository.getCurrentUserId()
 }
 
 sealed class AuthState {

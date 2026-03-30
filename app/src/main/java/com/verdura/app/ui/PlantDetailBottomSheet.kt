@@ -20,7 +20,6 @@ import com.google.android.material.chip.ChipGroup
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.squareup.picasso.Picasso
 import com.verdura.app.R
-import com.verdura.app.api.models.PlantDetailResponse
 import com.verdura.app.api.models.TrefleSpeciesDetail
 import com.verdura.app.data.AppDatabase
 import com.verdura.app.model.PlantInfo
@@ -72,7 +71,7 @@ class PlantDetailBottomSheet : BottomSheetDialogFragment() {
         view.findViewById<TextView>(R.id.detailName).text = name
         view.findViewById<TextView>(R.id.detailScientificName).text = scientificName ?: ""
 
-        showQuickFacts(view, listCycle, listWatering, listSunlight, null, null, null, null, null)
+        showQuickFacts(view, listCycle, listWatering, listSunlight)
 
         val descView = view.findViewById<TextView>(R.id.detailDescription)
         descView.text = "Loading plant details\u2026"
@@ -82,17 +81,15 @@ class PlantDetailBottomSheet : BottomSheetDialogFragment() {
         loading.isVisible = true
 
         val db = AppDatabase.getInstance(requireContext())
-        val repository = PlantRepository(
-            db.plantInfoDao(), db.plantDetailCacheDao(), db.trefleDetailCacheDao()
-        )
+        val repository = PlantRepository(db.plantInfoDao(), db.trefleDetailCacheDao())
 
         lifecycleScope.launch {
-            val detailResult = repository.fetchPlantDetails(plantId)
+            val result = repository.fetchPlantDetails(plantId, scientificName)
             ensureActive()
             if (!isAdded) return@launch
 
-            detailResult.fold(
-                onSuccess = { detail -> bindPerenualDetail(view, detail) },
+            result.fold(
+                onSuccess = { detail -> bindTrefleDetail(view, detail) },
                 onFailure = {
                     if (descView.text == "Loading plant details\u2026") {
                         descView.text = "No description available"
@@ -101,77 +98,93 @@ class PlantDetailBottomSheet : BottomSheetDialogFragment() {
                 }
             )
 
-            if (!scientificName.isNullOrBlank()) {
-                val trefleResult = repository.fetchTrefleDetails(scientificName, name)
-                ensureActive()
-                if (!isAdded) return@launch
-                trefleResult.onSuccess { detail ->
-                    bindTrefleData(view, detail)
-                    updateQuickFactsFromTrefle(view, detail)
-                    fillOriginFromTrefle(view, detail)
-                    repository.backfillPlantInfoFromTrefle(plantId, detail)
-                }
-            }
-
-            if (descView.text == "Loading plant details\u2026") {
-                descView.text = "No description available"
-            }
-            showFallbackSections(view)
             loading.isVisible = false
         }
     }
 
-    private fun bindPerenualDetail(view: View, detail: PlantDetailResponse) {
+    private fun bindTrefleDetail(view: View, detail: TrefleSpeciesDetail) {
         val descView = view.findViewById<TextView>(R.id.detailDescription)
-        descView.text = if (!detail.description.isNullOrBlank()) {
-            detail.description
+        descView.text = if (!detail.growth?.description.isNullOrBlank()) {
+            detail.growth?.description
         } else {
             "No description available"
         }
         descView.isVisible = true
 
-        val cycle = detail.cycle?.takeUnless { it.startsWith("Upgrade") } ?: listCycle
-        val watering = detail.watering?.takeUnless { it.startsWith("Upgrade") } ?: listWatering
-        val sunlight = detail.sunlight
-            ?.filter { !it.startsWith("Upgrade") }
-            ?.joinToString(", ")
-            ?.takeIf { it.isNotBlank() }
-            ?: listSunlight
-        showQuickFacts(
-            view, cycle, watering, sunlight,
-            detail.careLevel, detail.type, detail.growthRate,
-            detail.indoor, detail.flowers
-        )
+        val cycle = detail.duration?.firstOrNull()?.replaceFirstChar { it.uppercase() } ?: listCycle
+        val watering = detail.growth?.let {
+            (it.soilHumidity ?: it.atmosphericHumidity)?.let { h -> PlantRepository.humidityToLabel(h) }
+        } ?: listWatering
+        val sunlight = detail.growth?.light?.let { PlantRepository.lightToLabel(it) } ?: listSunlight
+        showQuickFacts(view, cycle, watering, sunlight)
 
-        if (!detail.floweringSeason.isNullOrBlank()) {
+        if (detail.specifications?.toxicity != null) {
+            val tox = detail.specifications.toxicity
+            val label = if (tox == "none") "Non-toxic" else tox.replaceFirstChar { it.uppercase() }
+            addStyledChip(view.findViewById(R.id.factsChipGroup), "\u26A0\uFE0F $label", ChipCategory.CARE)
+        }
+        detail.specifications?.growthRate?.takeIf { it.isNotBlank() }?.let {
+            addStyledChip(view.findViewById(R.id.factsChipGroup), "\uD83D\uDCC8 $it growth", ChipCategory.GROWTH)
+        }
+        detail.flower?.color?.takeIf { it.isNotEmpty() }?.let {
             addStyledChip(
                 view.findViewById(R.id.factsChipGroup),
-                "\uD83C\uDF38 Blooms: ${detail.floweringSeason}",
+                "\uD83C\uDF3A ${it.joinToString(", ") { c -> c.replaceFirstChar { ch -> ch.uppercase() } }}",
                 ChipCategory.FLOWER
             )
         }
 
         val originCard = view.findViewById<View>(R.id.originCard)
         val originText = view.findViewById<TextView>(R.id.originText)
-        originText.text = if (!detail.origin.isNullOrEmpty()) {
-            detail.origin.joinToString(", ")
-        } else {
-            "N/A"
-        }
+        val originStr = buildOriginString(detail)
+        originText.text = originStr.ifBlank { "N/A" }
         originCard.isVisible = true
 
         val propCard = view.findViewById<View>(R.id.propagationCard)
         val propText = view.findViewById<TextView>(R.id.propagationText)
-        propText.text = if (!detail.propagation.isNullOrEmpty()) {
-            detail.propagation.joinToString(", ")
-        } else {
-            "N/A"
-        }
+        propText.text = buildPropagationString(detail).ifBlank { "N/A" }
         propCard.isVisible = true
 
-        if (!detail.defaultImage?.originalUrl.isNullOrEmpty()) {
+        loadBestImage(view, detail)
+
+        bindCareDetails(view, detail)
+    }
+
+    private fun buildOriginString(detail: TrefleSpeciesDetail): String {
+        if (!detail.observations.isNullOrBlank()) return detail.observations
+
+        val nativeZones = detail.distributions?.native
+            ?.mapNotNull { it.name }
+            ?.takeIf { it.isNotEmpty() }
+            ?: return ""
+
+        if (nativeZones.size <= 5) return nativeZones.joinToString(", ")
+
+        val shown = nativeZones.take(3).joinToString(", ")
+        return "$shown and ${nativeZones.size - 3} more regions"
+    }
+
+    private fun buildPropagationString(detail: TrefleSpeciesDetail): String {
+        if (!detail.growth?.sowing.isNullOrBlank()) return detail.growth!!.sowing!!
+        val hints = mutableListOf<String>()
+        detail.specifications?.ligneousType?.let { hints.add(it.replaceFirstChar { c -> c.uppercase() }) }
+        detail.specifications?.growthHabit?.let { hints.add(it) }
+        return hints.joinToString(" \u2022 ")
+    }
+
+    private fun loadBestImage(view: View, detail: TrefleSpeciesDetail) {
+        val bestUrl = detail.images?.let { imgs ->
+            imgs.habit?.firstOrNull()?.imageUrl
+                ?: imgs.leaf?.firstOrNull()?.imageUrl
+                ?: imgs.flower?.firstOrNull()?.imageUrl
+                ?: imgs.other?.firstOrNull()?.imageUrl
+                ?: imgs.fruit?.firstOrNull()?.imageUrl
+                ?: imgs.bark?.firstOrNull()?.imageUrl
+        } ?: detail.imageUrl
+
+        if (!bestUrl.isNullOrEmpty()) {
             Picasso.get()
-                .load(detail.defaultImage?.originalUrl)
+                .load(bestUrl)
                 .placeholder(R.drawable.ic_plant)
                 .error(R.drawable.ic_plant)
                 .into(view.findViewById<ImageView>(R.id.detailImage))
@@ -195,38 +208,14 @@ class PlantDetailBottomSheet : BottomSheetDialogFragment() {
         view: View,
         cycle: String?,
         watering: String?,
-        sunlight: String?,
-        careLevel: String?,
-        type: String?,
-        growthRate: String?,
-        indoor: Boolean?,
-        flowers: Boolean?
+        sunlight: String?
     ) {
         val chipGroup = view.findViewById<ChipGroup>(R.id.factsChipGroup)
-
         val chips = mutableListOf<Pair<String, ChipCategory>>()
 
         chips.add("\uD83D\uDD04 ${cycle?.takeIf { it.isNotBlank() } ?: "N/A"}" to ChipCategory.LIFECYCLE)
         chips.add("\uD83D\uDCA7 ${watering?.takeIf { it.isNotBlank() }?.let { "$it watering" } ?: "N/A"}" to ChipCategory.WATER)
         chips.add("☀\uFE0F ${sunlight?.takeIf { it.isNotBlank() } ?: "N/A"}" to ChipCategory.SUN)
-        careLevel?.takeIf { it.isNotBlank() }?.let {
-            chips.add("\uD83C\uDF31 $it care" to ChipCategory.CARE)
-        }
-        type?.takeIf { it.isNotBlank() }?.let {
-            chips.add("\uD83C\uDF3F $it" to ChipCategory.TYPE)
-        }
-        growthRate?.takeIf { it.isNotBlank() }?.let {
-            chips.add("\uD83D\uDCC8 $it growth" to ChipCategory.GROWTH)
-        }
-        indoor?.let {
-            chips.add(
-                (if (it) "\uD83C\uDFE0 Indoor friendly" else "\uD83C\uDF33 Outdoor")
-                    to ChipCategory.LOCATION
-            )
-        }
-        flowers?.let {
-            if (it) chips.add("\uD83C\uDF3A Flowers" to ChipCategory.FLOWER)
-        }
 
         chipGroup.removeAllViews()
         view.findViewById<View>(R.id.factsHeading).isVisible = true
@@ -256,64 +245,15 @@ class PlantDetailBottomSheet : BottomSheetDialogFragment() {
         chipGroup.addView(chip)
     }
 
-    private fun updateQuickFactsFromTrefle(view: View, detail: TrefleSpeciesDetail) {
-        val chipGroup = view.findViewById<ChipGroup>(R.id.factsChipGroup)
-        val sun = detail.growth?.light?.let { lightToLabel(it) }
-        val water = detail.growth?.let {
-            (it.soilHumidity ?: it.atmosphericHumidity)?.let { h -> humidityToLabel(h) }
-        }
-        val cycle = detail.duration?.firstOrNull()?.replaceFirstChar { it.uppercase() }
-
-        if (sun != null || water != null || cycle != null) {
-            val existingChips = (0 until chipGroup.childCount).map {
-                (chipGroup.getChildAt(it) as? Chip)?.text?.toString()
-            }
-            val hasNACycle = existingChips.any { it?.contains("N/A") == true && it.contains("\uD83D\uDD04") }
-            val hasNAWater = existingChips.any { it?.contains("N/A") == true && it.contains("\uD83D\uDCA7") }
-            val hasNASun = existingChips.any { it?.contains("N/A") == true && it.contains("☀") }
-
-            if (hasNACycle && cycle != null) replaceChipText(chipGroup, "\uD83D\uDD04", "\uD83D\uDD04 $cycle")
-            if (hasNAWater && water != null) replaceChipText(chipGroup, "\uD83D\uDCA7", "\uD83D\uDCA7 $water watering")
-            if (hasNASun && sun != null) replaceChipText(chipGroup, "☀", "☀\uFE0F $sun")
-        }
-    }
-
-    private fun replaceChipText(chipGroup: ChipGroup, iconPrefix: String, newText: String) {
-        for (i in 0 until chipGroup.childCount) {
-            val chip = chipGroup.getChildAt(i) as? Chip ?: continue
-            if (chip.text?.toString()?.startsWith(iconPrefix) == true) {
-                chip.text = newText
-                return
-            }
-        }
-    }
-
-    private fun fillOriginFromTrefle(view: View, detail: TrefleSpeciesDetail) {
-        val originText = view.findViewById<TextView>(R.id.originText)
-        if (originText.text == "N/A" && !detail.observations.isNullOrBlank()) {
-            originText.text = detail.observations
-        }
-        val propText = view.findViewById<TextView>(R.id.propagationText)
-        if (propText.text == "N/A" && !detail.growth?.sowing.isNullOrBlank()) {
-            propText.text = detail.growth?.sowing
-        }
-        if (propText.text == "N/A") {
-            val hints = mutableListOf<String>()
-            detail.specifications?.ligneousType?.let { hints.add(it.replaceFirstChar { c -> c.uppercase() }) }
-            detail.specifications?.growthHabit?.let { hints.add(it) }
-            if (hints.isNotEmpty()) propText.text = hints.joinToString(" \u2022 ")
-        }
-    }
-
-    private fun bindTrefleData(view: View, detail: TrefleSpeciesDetail) {
+    private fun bindCareDetails(view: View, detail: TrefleSpeciesDetail) {
         val container = view.findViewById<LinearLayout>(R.id.careContainer)
         val items = mutableListOf<Triple<String, String, String>>()
 
         detail.growth?.light?.let {
-            items.add(Triple("\uD83D\uDD06", "Light Level", lightToLabel(it)))
+            items.add(Triple("\uD83D\uDD06", "Light Level", PlantRepository.lightToLabel(it)))
         }
         (detail.growth?.soilHumidity ?: detail.growth?.atmosphericHumidity)?.let {
-            items.add(Triple("\uD83D\uDCA7", "Humidity", humidityToLabel(it)))
+            items.add(Triple("\uD83D\uDCA7", "Humidity", PlantRepository.humidityToLabel(it)))
         }
         detail.growth?.minimumTemperature?.degC?.let {
             items.add(Triple("\uD83C\uDF21\uFE0F", "Min Temperature", "${it.toInt()}\u00B0C"))
@@ -412,20 +352,6 @@ class PlantDetailBottomSheet : BottomSheetDialogFragment() {
         private const val ARG_WATERING = "watering"
         private const val ARG_SUNLIGHT = "sunlight"
 
-        private fun lightToLabel(light: Int): String = when {
-            light <= 3 -> "Low light"
-            light <= 5 -> "Part shade"
-            light <= 7 -> "Bright indirect"
-            else -> "Full sun"
-        }
-
-        private fun humidityToLabel(humidity: Int): String = when {
-            humidity <= 2 -> "Minimum"
-            humidity <= 4 -> "Average"
-            humidity <= 6 -> "Frequent"
-            else -> "Abundant"
-        }
-
         fun newInstance(plant: PlantInfo): PlantDetailBottomSheet {
             return PlantDetailBottomSheet().apply {
                 arguments = Bundle().apply {
@@ -439,6 +365,5 @@ class PlantDetailBottomSheet : BottomSheetDialogFragment() {
                 }
             }
         }
-
     }
 }
